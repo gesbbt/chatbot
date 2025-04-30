@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Chatbot</title>
+  <style>
+    body { font-family: sans-serif; background: #f9fafb; margin: 0; }
+    #chatbox {
+      max-width: 600px; margin: 2em auto;
+      background: white; border-radius: 12px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+      padding: 1em; display: flex; flex-direction: column; gap: 0.5em;
+    }
+    #messages { height: 400px; overflow-y: auto; border: 1px solid #eee; padding: 1em; background: #f1f5f9; }
+    .msg { margin: 0.3em 0; padding: 0.6em 1em; border-radius: 10px; max-width: 80%; }
+    .user { background: #d1fae5; align-self: flex-end; }
+    .bot { background: #e5e7eb; align-self: flex-start; }
+    #input-area { display: flex; gap: 0.5em; margin-top: 1em; }
+    input[type="text"] { flex: 1; padding: 0.8em; font-size: 1em; border-radius: 8px; border: 1px solid #ccc; }
+    button { padding: 0.8em 1.2em; background: #10b981; color: white; border: none; border-radius: 8px; cursor: pointer; }
+    button:hover { background: #059669; }
+  </style>
+</head>
+<body>
+  <div id="chatbox">
+    <div id="messages"></div>
+    <div id="input-area">
+      <input id="userInput" type="text" placeholder="Escribe tu pregunta..." />
+      <button onclick="sendMessage()">Enviar</button>
+    </div>
+  </div>
+
+  <script>
+    const webhookUrl = "https://n8n.srv733990.hstgr.cloud/webhook/d2245e11-3fe6-468e-b43d-2d6a5e09abae/chat";
+    const token = "mi_token_super_secreto_skdf70reuwiqvfpggfdpoone555330035jfni56t46DSFFDGDGDGd"; // Asegúrate de que coincida con el del nodo Code
+
+    const messagesDiv = document.getElementById("messages");
+    const input = document.getElementById("userInput");
+
+    function appendMessage(text, sender) {
+      const div = document.createElement("div");
+      div.className = "msg " + sender;
+      div.textContent = text;
+      messagesDiv.appendChild(div);
+      messagesDiv.scrollTop = messagesDiv.scrollHeight;
+    }
+
+    async function sendMessage() {
+      const msg = input.value.trim();
+      if (!msg) return;
+      appendMessage(msg, "user");
+      input.value = "";
+
+      try {
+        const res = await fetch(webhookUrl, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ message: msg, token })
+        });
+        const data = await res.json();
+        appendMessage(data.reply || "Sin respuesta", "bot");
+      } catch (err) {
+        appendMessage("❌ Error al conectar con el servidor", "bot");
+      }
+    }
+
+    input.addEventListener("keypress", e => {
+      if (e.key === "Enter") sendMessage();
+    });
+  </script>
+</body>
+</html>
